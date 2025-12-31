@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Happy New Year</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        overflow: hidden;
+        background: linear-gradient(to right, #ffecd2, #fcb69f);
+    }
+
+    h1 { font-size: 38px; }
+
+    img {
+        width: 220px;
+        max-width: 80%;
+        border-radius: 18px;
+        margin-top: 50px;
+    }
+
+    button {
+        font-size: 20px;
+        padding: 12px 28px;
+        margin: 20px;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+    }
+
+    #yes { background: #4CAF50; color: white; }
+    #no {
+        background: #f44336;
+        color: white;
+        position: absolute;
+    }
+
+    .page { display: none; }
+    #page1 { display: block; }
+
+    /* ===== NEW YEAR PAGE ===== */
+    #page3 {
+        background: radial-gradient(circle, #000428, #004e92);
+        color: white;
+    }
+
+    #newYearText {
+        font-family: 'Pacifico', cursive;
+        font-size: 64px;
+        margin-top: 30px;
+        background: linear-gradient(90deg, gold, pink, cyan);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: glow 2s infinite alternate;
+        z-index: 3;
+        position: relative;
+    }
+
+    @keyframes glow {
+        from { text-shadow: 0 0 10px gold; }
+        to { text-shadow: 0 0 35px pink; }
+    }
+
+    #newYearPhoto {
+        width: 240px;
+        border-radius: 20px;
+        margin-top: 15px;
+        position: relative;
+        z-index: 3;
+    }
+
+    /* Flower rain */
+    .flower {
+        position: fixed;
+        top: -50px;
+        font-size: 26px;
+        animation: fall linear infinite;
+        z-index: 2;
+    }
+
+    @keyframes fall {
+        to { transform: translateY(110vh) rotate(360deg); }
+    }
+
+    canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1;
+    }
+</style>
+</head>
+
+<body>
+
+<!-- PAGE 1 -->
+<div id="page1" class="page">
+    <img src="photo1.jpg">
+    <h1>Do you like me? 🤍</h1>
+    <button id="yes" onclick="goYes()">Yes</button>
+    <button id="no" onmouseover="moveNo()">No</button>
+</div>
+
+<!-- PAGE 2 -->
+<div id="page2" class="page">
+    <img src="photo2.jpg">
+    <h1>I know you would click yes 🌝🤍</h1>
+    <button onclick="goNewYear()">Click here now</button>
+</div>
+
+<!-- PAGE 3 -->
+<div id="page3" class="page">
+    <h1 id="newYearText">🎉 Happy New Year 🎉</h1>
+    <img id="newYearPhoto" src="photo3.jpg">
+    <canvas id="fireworks"></canvas>
+</div>
+
+<!-- MUSIC -->
+<audio id="music">
+    <source src="music.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+    function moveNo() {
+        no.style.left = Math.random()*(window.innerWidth-120)+"px";
+        no.style.top = Math.random()*(window.innerHeight-120)+"px";
+    }
+
+    function goYes() {
+        page1.style.display="none";
+        page2.style.display="block";
+    }
+
+    function goNewYear() {
+        page2.style.display="none";
+        page3.style.display="block";
+        startShow();
+    }
+
+    /* ===== FLOWER RAIN ===== */
+    function startFlowerRain() {
+        const flowers = ["🌸","🌼","🌺","🌹","🌻","💐"];
+        setInterval(()=>{
+            let f=document.createElement("div");
+            f.className="flower";
+            f.innerHTML=flowers[Math.floor(Math.random()*flowers.length)];
+            f.style.left=Math.random()*window.innerWidth+"px";
+            f.style.animationDuration=(3+Math.random()*3)+"s";
+            document.body.appendChild(f);
+            setTimeout(()=>f.remove(),6000);
+        },120);
+    }
+
+    /* ===== MUSIC + FIREWORK SYNC ===== */
+    const audio = document.getElementById("music");
+    const canvas = document.getElementById("fireworks");
+    const ctx = canvas.getContext("2d");
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+
+    let fireworks = [];
+
+    class Firework {
+        constructor() {
+            this.x=Math.random()*canvas.width;
+            this.y=canvas.height;
+            this.targetY=Math.random()*canvas.height/2;
+            this.speed=6;
+            this.exploded=false;
+            this.parts=[];
+        }
+        update(){
+            if(!this.exploded){
+                this.y-=this.speed;
+                if(this.y<=this.targetY){
+                    this.exploded=true;
+                    for(let i=0;i<70;i++){
+                        this.parts.push(new Particle(this.x,this.y));
+                    }
+                }
+            }
+            this.parts.forEach(p=>p.update());
+        }
+        draw(){
+            if(!this.exploded){
+                ctx.fillStyle="white";
+                ctx.fillRect(this.x,this.y,2,10);
+            }
+            this.parts.forEach(p=>p.draw());
+        }
+    }
+
+    class Particle{
+        constructor(x,y){
+            this.x=x; this.y=y;
+            this.vx=(Math.random()-0.5)*7;
+            this.vy=(Math.random()-0.5)*7;
+            this.life=80;
+            this.color=`hsl(${Math.random()*360},100%,60%)`;
+        }
+        update(){
+            this.x+=this.vx;
+            this.y+=this.vy;
+            this.life--;
+        }
+        draw(){
+            ctx.fillStyle=this.color;
+            ctx.beginPath();
+            ctx.arc(this.x,this.y,2,0,Math.PI*2);
+            ctx.fill();
+        }
+    }
+
+    function animate(){
+        ctx.fillStyle="rgba(0,0,0,0.25)";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+
+        fireworks.forEach((f,i)=>{
+            f.update(); f.draw();
+            if(f.exploded && f.parts.every(p=>p.life<=0))
+                fireworks.splice(i,1);
+        });
+        requestAnimationFrame(animate);
+    }
+
+    function startShow(){
+        audio.play();              // 🎵 START MUSIC
+        startFlowerRain();
+        animate();
+
+        // 🔥 FIREWORKS SYNCED WITH BEAT
+        setInterval(()=>{
+            if(!audio.paused){
+                fireworks.push(new Firework());
+                if(Math.random()>0.6)
+                    fireworks.push(new Firework());
+            }
+        },300); // beat timing
+    }
+</script>
+
+</body>
+</html>
